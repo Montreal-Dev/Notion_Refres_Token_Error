@@ -30,15 +30,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       redirectUri: process.env.AUTH_NOTION_REDIRECT_URI ?? "",
       token: {
         url: "https://api.notion.com/v1/oauth/token",
-        conform: async (response: NextResponse) => {
-          const json = await response.clone().json();
-          if (!json.refresh_token || typeof json.refresh_token !== "string") {
-            delete json.refresh_token;
+        async conform(response: Response) {
+          const body = await response.json();
+          if (typeof body?.refresh_token === null) {
+            delete body.refresh_token;
           }
-          return new Response(JSON.stringify(json), {
-            status: response.status,
-            headers: response.headers,
-          });
+          return new Response(JSON.stringify(body), response);
         },
       },
     }),
