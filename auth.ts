@@ -35,13 +35,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.AUTH_NOTION_ID!,
       clientSecret: process.env.AUTH_NOTION_SECRET!,
       redirectUri: process.env.AUTH_NOTION_REDIRECT_URI ?? "",
+      token: {
+        url: "https://api.notion.com/v1/oauth/token",
+        conform: async (response: NextResponse) => {
+          const data = await response.clone().json();
+          if (data?.refresh_token === null) {
+            //delete or set to undefined ?
+            delete data.refresh_token;
+          }
+          return new Response(JSON.stringify(data), {
+            status: response.status,
+            headers: response.headers,
+          });
+        },
+      },
     }),
   ],
   callbacks: {
     async jwt({ token, account }) {
       if (account?.access_token) {
-        const exp_in =
-          account.expires_in ?? Number(process.env.AUTH_EXP_SECONDS!);
         token = {
           ...token,
           access_token: account.access_token,
@@ -52,7 +64,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name: account.workspace_name!.toString() as string,
             icon: account.workspace_icon?.toString() ?? null,
           },
-          exp_at: Date.now() + exp_in * 1000,
         };
       }
       return token;
