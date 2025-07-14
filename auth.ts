@@ -3,6 +3,7 @@ import { JWT } from "next-auth/jwt";
 import "next-auth/jwt";
 
 import Notion from "next-auth/providers/notion";
+import { NextResponse } from "next/server";
 
 export const authProviderLinked = {
   notion: "notion",
@@ -27,6 +28,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.AUTH_NOTION_ID!,
       clientSecret: process.env.AUTH_NOTION_SECRET!,
       redirectUri: process.env.AUTH_NOTION_REDIRECT_URI ?? "",
+      token: {
+        url: "https://api.notion.com/v1/oauth/token",
+        conform: async (response: NextResponse) => {
+          const data = await response.clone().json();
+          if (data?.refresh_token === null) {
+            console.log("delete refresh_token");
+            delete data.refresh_token;
+          }
+          return new Response(JSON.stringify(data), {
+            status: response.status,
+            headers: response.headers,
+          });
+        },
+      },
     }),
   ],
   callbacks: {
