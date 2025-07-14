@@ -3,14 +3,6 @@ import { JWT } from "next-auth/jwt";
 import "next-auth/jwt";
 
 import Notion from "next-auth/providers/notion";
-import { NextResponse } from "next/server";
-
-const isProduction = process.env.NODE_ENV === "production";
-const prependSecure = isProduction ? true : false;
-const prependHost = isProduction ? "__Host-" : "";
-const cookieSitePolicy = isProduction ? "lax" : "none";
-const cookieSecurePolicy = isProduction;
-const cookiePartitionedPolicy = isProduction ? true : undefined;
 
 export const authProviderLinked = {
   notion: "notion",
@@ -64,34 +56,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         throw new Error("access_token exposed");
       }
       return session;
-    },
-  },
-  cookies: {
-    sessionToken: {
-      name: `${prependSecure}authjs.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: cookieSitePolicy,
-        secure: cookieSecurePolicy,
-        partitioned: cookiePartitionedPolicy,
-      },
-    },
-    callbackUrl: {
-      name: `${prependSecure}authjs.callback-url`,
-      options: {
-        sameSite: cookieSitePolicy,
-        secure: cookieSecurePolicy,
-        partitioned: cookiePartitionedPolicy,
-      },
-    },
-    csrfToken: {
-      name: `${prependHost}authjs.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: cookieSitePolicy,
-        secure: cookieSecurePolicy,
-        partitioned: cookiePartitionedPolicy,
-      },
     },
   },
 });
